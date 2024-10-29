@@ -46,7 +46,13 @@ The swing package has components like JFrame, JPanel, JButton, etc. The MouseAda
 
 Now change the class header so it extends JFrame. This will then inherit all manner of pre-built frame things like a title bar, a close button, etc.
 
-Create a constructor, either through VSC or by typing the header. Then add the following code.
+Create a constructor, either through VSC or by typing the header. As a reminder, that should look like this.
+```
+public OvalDrawingFrame() {
+    <code goes here>
+}
+```
+Then add the following code where it says "code goes here". These are very typical on almost every frame we'll use.
 ```
 // set up the frame
 setTitle("Oval Drawing Frame");
@@ -71,7 +77,7 @@ private class DrawingPanel extends JPanel {
     }
 }
 ```
-This private class will be a version of JPanel we can add custom methods to. Because we don't need it to do anything in particular, we don't need to write a constructor because it will default to the empty one from JPanel. We need to override the paintComponent method because we're going to draw on the panel, but leave it empty for now.
+This private class only exists inside of OvalDrawingFrame because it was defined inside it. It will be a version of JPanel we can add custom methods to, and because it is inside OvalDrawingFrame, it will have access to all the variables and methods of that class. Because we don't need it to do anything in particular, we don't need to write a constructor because it will default to the empty one from JPanel. We need to override the paintComponent method because we're going to draw on the panel, but leave it empty for now.
 
 Now we need to instantiate the panel. In the constructor, add this code after the line that sets the close operation.
 ```
@@ -81,43 +87,55 @@ add(drawingPanel);
 ```
 This should let you test the program. It won't do anything yet, of course, but it should run.
 
-## Recording Locations
+## Recording startPoint
 
 As we need the locations of our mouse events to be communicated throughout the class, add the following to the class after the signature but before the constructor.
 ```
 private Point startPoint;   
 private Point endPoint;     
 ```
-These are used to record where the mouse is pressed & released. Next we need to actually assign the values. To do this, we first assign startPoint when the button is pressed. Add the following after the line that adds the panel.
-```
-// record start point
-drawingPanel.addMouseListener(new MouseAdapter() {
-    @Override
-    public void mousePressed(MouseEvent e) {
-        startPoint = e.getPoint();
-    }
-});
-```
-Since we are only interested in the press & release, we don't need to override all the event methods. But we also won't implement the release method for reasons we will see shortly.
+These are used to record where the mouse is pressed & released. Next we need to actually assign the values. To do this, we first assign startPoint when the button is pressed. 
 
-The MouseEvent e contains information about what button was pressed and where. As seen in the example, other sorts of events will need to read other information. Here, we read the point the mouse was pressed using the getPoint() method. This just records the x & y coordinates it was pressed.
+Add the following class after the DrawingPanel class.
+```
+private class MousePress implements MouseAdapter() {
+    @Override
+    public void mousePressed(MouseEvent event) {
+        // record start point
+        startPoint = event.getPoint();
+    }
+}
+```
+The MouseEvent event contains information about where it was pressed, which getPoint() reads. Because MousePress is a class private to OvalDrawingFrame, it has access to startPoint. Now we have to attach this to our panel.
+
+```
+drawingPanel.addMouseListener(new MousePress());
+```
+Since we don't need to do anything else with MousePress, there's no need to name it. This is sometimes referred to as an "anonymous" object. Since we are only interested in the press & release, we don't need to override all the event methods. But we also won't implement the release method for reasons we will see shortly.
+
+The MouseEvent event contains information about what button was pressed and where. As seen in the example, other sorts of events will need to read other information. Here, we read the point the mouse was pressed using the getPoint() method. This just records the x & y coordinates it was pressed.
 
 Testing your program at this point will help catch any miscellaneous errors that may have cropped up, so it's a good idea. But pressing the mouse button won't cause any visible event yet.
 
-We add the following code to record where the mouse button is released.
-```
-// record end point
-drawingPanel.addMouseMotionListener(new MouseAdapter() {
+## Recording endPoint
 
+We add the following class after the MousePressed class.
+```
+private class MouseDrag implements MouseAdapter {
     // helps draw the circle while dragging
     @Override
-    public void mouseDragged(MouseEvent e) {
-        endPoint = e.getPoint();
-        drawingPanel.repaint(); // repaint will call paintComponent
+    public void mouseDragged(MouseEvent event) {
+        endPoint = event.getPoint(); // record end point
+
+        drawingPanel.repaint();      // repaint will call paintComponent
     }
-});
+}
 ```
-We have to use the MouseMotionListener to get the mouseDragged method. The reason we want to use mouseDragged instead of mouseReleased in the MouseListener is so we can have an oval being drawn while the user is dragging the mouse. It lets them see what they're doing instead of just having it appear at the end.
+And after the previous mouse listener, we add the following.
+```
+drawingPanel.addMouseMotionListener(new MouseDrag() );
+```
+We have to use the MouseMotionListener to access the mouseDragged method. The reason we want to use mouseDragged instead of mouseReleased (which was in the MouseListener) is so we can have an oval being drawn *while* the user is dragging the mouse. It lets them see what they're doing instead of just having it appear at the end.
 
 As with mousePressed, the MouseEvent is read to get the point that the mouse has been dragged to. Then calling repaint() from drawingPanel will do some housekeeping before calling the paintComponent method - which we've overwritten earlier, but we haven't finished up with yet. Consequently, it would be a good idea to test your program at this point to make sure no random error has arisen, but clicking & dragging won't draw an oval yet.
 
