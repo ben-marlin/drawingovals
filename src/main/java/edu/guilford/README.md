@@ -58,8 +58,11 @@ Then add the following code where it says "code goes here". These are very typic
 setTitle("Oval Drawing Frame");
 setSize(800, 600);
 setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+// keep this as last line of constructor
+setVisible(true);
 ```
-Now add a main method which instantiates an OvalDrawingFrame object, and sets it to be visible.
+Now add a main method which just instantiates an OvalDrawingFrame object.
 
 Test your program now. It should display, but won't do anything yet.
 
